@@ -18,8 +18,8 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  get(url = "", callback) {
-    this._addRoute("GET", url, callback);
+  get(url = "", middlewares = [], callback) {
+    this._addRoute("GET", url, callback, middlewares);
 
     return this;
   }
@@ -27,8 +27,8 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  post(url = "", callback) {
-    this._addRoute("POST", url, callback);
+  post(url = "", middlewares = [], callback) {
+    this._addRoute("POST", url, callback, middlewares);
 
     return this;
   }
@@ -36,8 +36,8 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  put(url = "", callback) {
-    this._addRoute("PUT", url, callback);
+  put(url = "", middlewares = [], callback) {
+    this._addRoute("PUT", url, callback, middlewares);
 
     return this;
   }
@@ -45,15 +45,16 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  delete(url = "", callback) {
-    this._addRoute("DELETE", url, callback);
+  delete(url = "", middlewares = [], callback) {
+    this._addRoute("DELETE", url, callback, middlewares);
 
     return this;
   }
 
-  _addRoute(method, url, callback) {
+  _addRoute(method, url, callback, middlewares) {
     this.routes.push({
       method,
+      middlewares,
       paramsGroupNames: this._getParamsGroupNames(this.baseUrl + url),
       regex: new RegExp(
         (this.baseUrl + url)
@@ -113,13 +114,31 @@ module.exports = class Router {
     }
     if (foundRoute) {
       const body = await this._readBody(req);
-      foundRoute.callback(
-        new Request(req, this._getParams(foundRoute, url), query, body),
-        new Response(res)
+      const request = new Request(
+        req,
+        this._getParams(foundRoute, url),
+        query,
+        body
       );
+      const response = new Response(res);
+
+      this._callMiddlewares(foundRoute, request, response);
     }
 
     return foundRoute;
+  }
+
+  _callMiddlewares(route, request, response) {
+    const middlewares = route.middlewares;
+    function next() {
+      let middleware = middlewares.shift();
+      if (middleware) {
+        middleware(request, response, next);
+      } else {
+        route.callback(request, response);
+      }
+    }
+    next();
   }
 
   async _readBody(req) {
