@@ -1,6 +1,6 @@
 # 💡 Pezzo
 
-### A blazing fast router for node
+### A blazing fast nodejs micro framework
 
 Based on the http module
 
