@@ -1,53 +1,8 @@
-const http = require("http");
 const urlParser = require("url");
+const Request = require("./Request");
+const Response = require("./Response");
 
-class Request {
-  constructor(req, params = {}, query = {}, body = {}) {
-    this.req = req;
-    this.params = params;
-    this.query = query;
-    this.body = body;
-  }
-}
-
-class Response {
-  constructor(res) {
-    this.res = res;
-    this.STATUS = 200;
-    this.HEADERS = {};
-  }
-  send(body = null) {
-    if (typeof body === "object") {
-      this.HEADERS["Content-Type"] = "application/json";
-    }
-    this.res.writeHead(this.STATUS, this.HEADERS);
-    this.res.write(typeof body === "object" ? JSON.stringify(body) : body);
-    this.res.end();
-  }
-
-  status(status) {
-    this.STATUS = status;
-
-    return this;
-  }
-
-  set(headerName, headerValue) {
-    this.HEADERS[headerName] = headerValue;
-
-    return this;
-  }
-
-  end() {
-    this.res.end();
-    return this;
-  }
-
-  pipe(stream) {
-    this.res.pipe(stream);
-  }
-}
-
-class Router {
+module.exports = class Router {
   constructor({ baseUrl = "" }) {
     this.baseUrl = baseUrl;
     this.routes = [];
@@ -189,39 +144,4 @@ class Router {
   _readQuery(path) {
     return urlParser.parse(path, true).query;
   }
-}
-
-class Pezzo {
-  constructor({ routers = [], port = 8080 } = {}) {
-    this.routers = routers;
-    this.server = http.createServer(async (req, res) => {
-      if (!(await this._handleRoute(req, res))) {
-        res.writeHead(404);
-        res.end(`Cannot GET ${req.url}`);
-      }
-    });
-
-    this.server.listen(port);
-  }
-
-  addRouter(router) {
-    this.routers.push(router);
-  }
-
-  async _handleRoute(req, res) {
-    let foundRoute;
-    for (let router of this.routers) {
-      foundRoute = await router._handleRoute(req, res);
-      if (foundRoute) {
-        break;
-      }
-    }
-
-    return foundRoute;
-  }
-}
-
-module.exports = {
-  Pezzo,
-  Router
 };

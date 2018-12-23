@@ -1,4 +1,4 @@
-const { Pezzo, Router } = require("../index");
+const { Pezzo, Router } = require("../src/index");
 const app = new Pezzo({ port: 8081 });
 
 app.addRouter(
