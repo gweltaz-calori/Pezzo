@@ -17,16 +17,15 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1"
   },
-  "scripts": {
-    "build": "babel tests --watch -d dist",
-    "start": "nodemon dist/index.js",
-    "watch-ts": "tsc -w"
-  },
+  "scripts": {},
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^6.2.0",
-    "typescript": "^3.2.2"
+    "jsonwebtoken": "^8.4.0",
+    "mongoose": "^5.4.0",
+    "mongoose-unique-validator": "^2.0.2"
   }
 }

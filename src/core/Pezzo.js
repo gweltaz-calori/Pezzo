@@ -1,6 +1,8 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
+
 module.exports = class Pezzo {
   constructor({ routers = [] } = {}) {
     this.routers = routers;
@@ -19,9 +21,26 @@ module.exports = class Pezzo {
   /*
   Auto load controllers
   */
-  initialize(path) {
+  async initialize(path) {
     this._autoLoadControllers(`${path}/src/controller`);
     this._loadEnvironnementVariables(path);
+    try {
+      await this._loadMongodb();
+      console.log("MONGO started");
+    } catch (e) {
+      console.log("MONGO not started");
+    }
+
+    return "ready";
+  }
+
+  async _loadMongodb() {
+    return await mongoose.connect(
+      `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${
+        process.env.MONGO_DATABASE
+      }`,
+      { useNewUrlParser: true }
+    );
   }
 
   _autoLoadControllers(path) {

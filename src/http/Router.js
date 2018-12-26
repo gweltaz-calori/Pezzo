@@ -18,7 +18,7 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  get(url = "", middlewares = [], callback) {
+  get(url = "", callback, middlewares = []) {
     this._addRoute("GET", url, callback, middlewares);
 
     return this;
@@ -27,7 +27,7 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  post(url = "", middlewares = [], callback) {
+  post(url = "", callback, middlewares = []) {
     this._addRoute("POST", url, callback, middlewares);
 
     return this;
@@ -36,7 +36,7 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  put(url = "", middlewares = [], callback) {
+  put(url = "", callback, middlewares = []) {
     this._addRoute("PUT", url, callback, middlewares);
 
     return this;
@@ -45,13 +45,17 @@ module.exports = class Router {
   /**
    * @param {callback} callback - The callback that handles the response.
    */
-  delete(url = "", middlewares = [], callback) {
+  delete(url = "", callback, middlewares = []) {
     this._addRoute("DELETE", url, callback, middlewares);
 
     return this;
   }
 
   _addRoute(method, url, callback, middlewares) {
+    if (url === "/") {
+      url = "";
+    }
+
     this.routes.push({
       method,
       middlewares,
@@ -118,7 +122,8 @@ module.exports = class Router {
         req,
         this._getParams(foundRoute, url),
         query,
-        body
+        body,
+        req.headers
       );
       const response = new Response(res);
 
@@ -129,7 +134,7 @@ module.exports = class Router {
   }
 
   _callMiddlewares(route, request, response) {
-    const middlewares = route.middlewares;
+    const middlewares = route.middlewares.slice(0);
     function next() {
       let middleware = middlewares.shift();
       if (middleware) {
@@ -153,7 +158,9 @@ module.exports = class Router {
           req.headers["content-type"] &&
           req.headers["content-type"] === "application/json"
         )
-          body = JSON.parse(body);
+          try {
+            body = JSON.parse(body);
+          } catch (e) {}
 
         resolve(body);
       });
